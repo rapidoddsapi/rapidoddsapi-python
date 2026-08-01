@@ -30,10 +30,14 @@ coverage.xml
 .ruff_cache/
 .pytype/
 
-# Secrets — never commit real API keys
+# Secrets
 .env
 .env.*
 !.env.example
+
+# Local scratch scripts
+live_check.py
+try_*.py
 
 # Editors
 .vscode/
