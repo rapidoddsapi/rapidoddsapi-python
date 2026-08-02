@@ -10,6 +10,22 @@ pip install rapidoddsapi
 Requires Python 3.9 or newer. Get a key at [rapidoddsapi.com](https://rapidoddsapi.com);
 the free tier is 250 credits with no card.
 
+## What you get
+
+- **100+ bookmakers** across Australia, the US and Europe, on 25 odds feeds —
+  Bet365, Pinnacle, Sportsbet, TAB, Ladbrokes, DraftKings, BetMGM, Unibet,
+  Bovada, Fanatics and more
+- **Every market** — head to head, totals, handicaps, team totals and player
+  props, full time and by period
+- **Live scores and player stats**, broken down by period
+- **A link straight to the game** on the bookmaker's own site, so a price you
+  find is one click from being placed
+- **Streaming over WebSocket**, pushed as each scrape finishes, reconnecting
+  and re-subscribing on its own
+- **Arbitrage and value bet finders** built in, over any two-sided market
+- **Typed throughout** — hints on every response, typed exceptions, automatic
+  retry with backoff
+
 ## Quickstart
 
 ```python
@@ -99,32 +115,46 @@ Toronto Blue Jays at Boston Red Sox  +4.85%
   Boston Red Sox 2.02 @ Sportsbet  stake $51.90
 ```
 
-`find_value_bets` de-vigs a sharp book to get a fair price, then reports every
-book paying more than that.
+`find_value_bets` strips the margin out of the odds to get a fair price, then
+reports every book paying more than that.
 
 ```python
-for bet in find_value_bets(odds, sharp="Pinnacle", min_edge=1.0):
+for bet in find_value_bets(odds, devig="Pinnacle", min_edge=1.0):
     print(f"+{bet['edge_percent']:.1f}%  {bet['selection']} {bet['price']} "
           f"@ {bet['bookmaker']}  (fair {bet['fair_price']:.2f})")
 ```
 
-### Which markets these work on
+### Settings
 
-Two-way head to head markets, including the period variants
-(`head_to_head_1st_half`, `_1st_5_innings`, `_1st_period`, `_1st_set`) and
-soccer's `draw_no_bet`.
+`find_arbitrage(odds, ...)`
 
-Anything else raises `ValidationError`. Totals, spreads, team totals, player
-props and three-way markets are coming in a later version.
+| | Default | |
+|---|---|---|
+| `market` | `"head_to_head"` | which market key to read |
+| `stake` | `100.0` | total to split across the two legs |
+| `min_profit` | `0.0` | percent. negative shows near misses |
+
+`find_value_bets(odds, ...)`
+
+| | Default | |
+|---|---|---|
+| `devig` | `"Pinnacle"` | where the fair price comes from, below |
+| `market` | `"head_to_head"` | which market key to read |
+| `min_edge` | `1.0` | percent |
+| `min_books` | `4` | books needed before an average is trusted |
 
 ```python
-find_arbitrage(odds, market="alternate_total_runs")
-# ValidationError: 'alternate_total_runs' carries a line, so its outcomes have
-# to be grouped by point before they can be paired.
+devig="Pinnacle"                      # one book, excluded from its own results
+devig="all"                           # every book, fair odds averaged
+devig={"Sportsbet": 0.7, "TAB": 0.3}  # only these, at these weights
 ```
 
-Both helpers match games across bookmakers on team names plus a time window, so
-books listing slightly different start times still line up.
+Both work on any market with two sides: head to head, totals, handicaps, team
+totals and player props. Three-way markets raise `ValidationError`. Legs and
+value bets carry `point`, `player_name` and `team_name` where they apply.
+
+Games are matched across books on team names plus a time window set by the
+sport, 1.8 hours for MLB because of doubleheaders and six for everything else.
 
 ## Methods
 

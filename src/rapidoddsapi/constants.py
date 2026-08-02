@@ -91,3 +91,15 @@ EU_BOOKMAKERS = (
 
 # Every feed once, in region order.
 BOOKMAKERS = tuple(dict.fromkeys(AU_BOOKMAKERS + US_BOOKMAKERS + EU_BOOKMAKERS))
+
+# How far apart two bookmakers' start times can be and still be the same game.
+# Wide enough to absorb books disagreeing on the listed time, narrow enough to
+# keep two meetings of the same teams apart. Six hours suits a sport that plays
+# once a day. MLB is the exception: a split doubleheader can start three hours
+# after the first game, and merging the two would compare prices across
+# different games.
+DEFAULT_MATCH_WINDOW_HOURS = 6.0
+
+MATCH_WINDOW_HOURS = {
+    "MLB": 1.8,
+}

@@ -13,7 +13,9 @@ from .client import RapidOddsAPI
 from .constants import (
     AU_BOOKMAKERS,
     BOOKMAKERS,
+    DEFAULT_MATCH_WINDOW_HOURS,
     EU_BOOKMAKERS,
+    MATCH_WINDOW_HOURS,
     RESULTS_SPORTS,
     SPORTS,
     UPCOMING_SPORTS,
@@ -34,9 +36,15 @@ from .exceptions import (
     SubscriptionError,
     ValidationError,
 )
-from .helpers import find_arbitrage, find_value_bets, group_games, parse_time
+from .helpers import (
+    find_arbitrage,
+    find_value_bets,
+    group_games,
+    match_window,
+    parse_time,
+)
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "RapidOddsAPI",
@@ -48,9 +56,12 @@ __all__ = [
     "AU_BOOKMAKERS",
     "US_BOOKMAKERS",
     "EU_BOOKMAKERS",
+    "MATCH_WINDOW_HOURS",
+    "DEFAULT_MATCH_WINDOW_HOURS",
     "find_arbitrage",
     "find_value_bets",
     "group_games",
+    "match_window",
     "parse_time",
     "RapidOddsAPIError",
     "APIError",

@@ -157,11 +157,28 @@ class ResultsUpdate(TypedDict):
     data: ResultsResponse
 
 
-class ArbLeg(TypedDict):
+class _ArbLegBase(TypedDict):
     team: str
     price: float
     bookmaker: str
     stake: float
+
+
+class ArbLeg(_ArbLegBase, total=False):
+    """One side of an arbitrage.
+
+    `team` is the outcome name as the bookmaker gives it: a team on a head to
+    head or a handicap, "Over" or "Under" on anything with a line.
+
+    The rest are present only on the markets that carry them, and are what
+    tells two legs apart when both are named "Over": `point` is the line,
+    negative on the favourite's side of a handicap, `player_name` is set on
+    player props and `team_name` on team totals.
+    """
+
+    point: float
+    player_name: str
+    team_name: str
 
 
 class Arbitrage(TypedDict):
@@ -173,7 +190,7 @@ class Arbitrage(TypedDict):
     legs: List[ArbLeg]
 
 
-class ValueBet(TypedDict):
+class _ValueBetBase(TypedDict):
     home_team: str
     away_team: str
     commence_time: str
@@ -183,6 +200,21 @@ class ValueBet(TypedDict):
     fair_price: float
     fair_probability: float
     edge_percent: float
+
+
+class ValueBet(_ValueBetBase, total=False):
+    """A price that beats fair value.
+
+    `fair_price` is what the bet is worth once the margin is stripped out,
+    taken from whichever book or books `devig` named.
+
+    `selection` and the optional `point`, `player_name` and `team_name` carry
+    the same meaning as on `ArbLeg`.
+    """
+
+    point: float
+    player_name: str
+    team_name: str
 
 
 class SportMarkets(TypedDict):
