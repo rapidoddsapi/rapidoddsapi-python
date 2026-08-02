@@ -183,3 +183,37 @@ class ValueBet(TypedDict):
     fair_price: float
     fair_probability: float
     edge_percent: float
+
+
+class SportMarkets(TypedDict):
+    """Market keys a sport carries, grouped the way the API groups them.
+
+    Any of these is valid as a `market_types` entry on `get_odds`.
+    """
+
+    game: List[str]
+    team: List[str]
+    player_props: List[str]
+
+
+class SportInfo(TypedDict, total=False):
+    """One sport. `markets` is only present when it was asked for."""
+
+    id: str
+    name: str
+    markets: SportMarkets
+
+
+class Usage(TypedDict):
+    """Credit balance for a key, covering the odds and results APIs together.
+
+    `resets` is False on the free tier, whose credits are a one off allowance
+    rather than a monthly one.
+    """
+
+    tier: str
+    status: str
+    credits_used: int
+    credits_limit: int
+    credits_remaining: int
+    resets: bool

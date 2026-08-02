@@ -132,6 +132,10 @@ books listing slightly different start times still line up.
 |---|---|---|
 | `get_odds(sport, market_types, bookmakers)` | `OddsResponse` | `market_types x ceil(bookmakers / 5)` |
 | `get_results(sport, status=, include=, game_id=, round_number=, days=)` | `ResultsResponse` | 1 |
+| `list_sports(markets=)` | `list[SportInfo]` | 0 |
+| `get_sport(sport, markets=)` | `SportInfo` | 0 |
+| `list_results_sports()` | `list[SportInfo]` | 0 |
+| `get_usage()` | `Usage` | 0 |
 | `stream_odds(sport, market_types, bookmakers)` | iterator of `OddsUpdate` | same as `get_odds`, per push |
 | `stream_results(sport, status=, include=, days=)` | iterator of `ResultsUpdate` | 1 per push |
 | `credits_used` | `int` | — |
@@ -140,7 +144,16 @@ Credits are only charged when games come back, so a query that matches nothing
 is free.
 
 `credits_used` counts what this client has spent since you created it. It knows
-nothing about other processes or earlier runs.
+nothing about other processes or earlier runs. For the real balance, ask the
+server:
+
+```python
+usage = client.get_usage()
+print(f"{usage['credits_remaining']} of {usage['credits_limit']} left")
+```
+
+On the free tier `usage["resets"]` is False: those credits are a one off
+allowance, not a monthly one.
 
 `AsyncRapidOddsAPI` has the same methods, awaited.
 
@@ -168,7 +181,26 @@ Six more soccer leagues (La Liga, Serie A, Bundesliga, Ligue 1, Champions
 League, A-League) are accepted as ids but return no games yet. They are in
 `UPCOMING_SPORTS` rather than `SPORTS`.
 
-Market keys vary by sport. See the [coverage page](https://rapidoddsapi.com/coverage).
+Those tuples are a snapshot shipped with the package. To ask the API itself,
+which costs nothing:
+
+```python
+client.list_sports()
+# [{'id': 'NBA', 'name': 'NBA'}, {'id': 'AFL', 'name': 'AFL'}, ...]
+```
+
+Market keys vary by sport, and `get_sport` returns the ones a sport carries:
+
+```python
+afl = client.get_sport("AFL")
+afl["markets"]["game"]
+# ['alternate_lines', 'alternate_total_points', 'head_to_head', ...]
+
+client.get_odds("AFL", afl["markets"]["game"][:1], ["Sportsbet"])
+```
+
+The [coverage page](https://rapidoddsapi.com/coverage) is the same information
+in a browser.
 
 ### Bookmakers
 

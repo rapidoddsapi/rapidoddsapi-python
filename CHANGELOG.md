@@ -10,6 +10,23 @@ Planned for the next release:
   and player props
 - Three-way markets
 
+## 0.2.0
+
+Four methods for things the API can now answer directly. None of them cost
+credits, and all need the API at v1.1.0 or later.
+
+- `list_sports` and `get_sport`, which return the sports the API accepts and,
+  on request, each one's market keys. The market keys are what `get_odds` takes
+  as `market_types`, so they no longer have to be looked up by hand
+- `list_results_sports` for the sports carrying live scores and player stats
+- `get_usage` for the credit balance the server holds. Unlike `credits_used` it
+  survives restarts and counts spend from anywhere, not just this client
+- `SportInfo`, `SportMarkets` and `Usage` response types
+
+The sport tuples in `constants` stay as an offline snapshot, and `BOOKMAKERS`
+remains the only list of bookmaker feeds, since the API has no endpoint for
+them.
+
 ## 0.1.0
 
 First release.

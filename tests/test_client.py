@@ -18,6 +18,30 @@ from rapidoddsapi import (
 KEY = "oa_your_api_key_here"
 ODDS_URL = "https://api.rapidoddsapi.com/sports/AFL/markets"
 RESULTS_URL = "https://api.rapidoddsapi.com/results/AFL"
+SPORTS_URL = "https://api.rapidoddsapi.com/sports"
+RESULTS_SPORTS_URL = "https://api.rapidoddsapi.com/results/sports"
+USAGE_URL = "https://api.rapidoddsapi.com/usage"
+
+SPORTS_LIGHT = [{"id": "AFL", "name": "AFL"}, {"id": "MLB", "name": "MLB"}]
+
+ONE_SPORT = {
+    "id": "AFL",
+    "name": "AFL",
+    "markets": {
+        "game": ["head_to_head", "alternate_lines"],
+        "team": ["alternate_team_total_points"],
+        "player_props": ["player_disposals"],
+    },
+}
+
+USAGE = {
+    "tier": "free",
+    "status": "active",
+    "credits_used": 37,
+    "credits_limit": 250,
+    "credits_remaining": 213,
+    "resets": False,
+}
 
 ONE_GAME = {
     "sport": "AFL",
@@ -152,6 +176,74 @@ class TestResultsParams:
         client.get_results("AFL", game_id=8216)
 
         assert route.calls.last.request.url.params["game_id"] == "8216"
+
+
+class TestMetadata:
+    """The sport directory and credit balance. None of these cost anything."""
+
+    @respx.mock
+    def test_list_sports_asks_for_the_light_list(self, client):
+        route = respx.get(SPORTS_URL).mock(return_value=httpx.Response(200, json=SPORTS_LIGHT))
+
+        assert client.list_sports() == SPORTS_LIGHT
+
+        params = route.calls.last.request.url.params
+        assert "markets" not in params
+        assert "sport" not in params
+
+    @respx.mock
+    def test_list_sports_can_include_markets(self, client):
+        route = respx.get(SPORTS_URL).mock(return_value=httpx.Response(200, json=SPORTS_LIGHT))
+
+        client.list_sports(markets=True)
+
+        assert route.calls.last.request.url.params["markets"] == "true"
+
+    @respx.mock
+    def test_get_sport_includes_markets_by_default(self, client):
+        route = respx.get(SPORTS_URL).mock(return_value=httpx.Response(200, json=ONE_SPORT))
+
+        assert client.get_sport("AFL") == ONE_SPORT
+
+        params = route.calls.last.request.url.params
+        assert params["sport"] == "AFL"
+        assert params["markets"] == "true"
+
+    @respx.mock
+    def test_unknown_sport_raises(self, client):
+        respx.get(SPORTS_URL).mock(
+            return_value=httpx.Response(404, json={"detail": "Sport 'XYZ' not found."})
+        )
+
+        with pytest.raises(NotFoundError):
+            client.get_sport("XYZ")
+
+    @respx.mock
+    def test_list_results_sports(self, client):
+        respx.get(RESULTS_SPORTS_URL).mock(
+            return_value=httpx.Response(200, json=SPORTS_LIGHT)
+        )
+
+        assert client.list_results_sports() == SPORTS_LIGHT
+
+    @respx.mock
+    def test_get_usage(self, client):
+        respx.get(USAGE_URL).mock(return_value=httpx.Response(200, json=USAGE))
+
+        assert client.get_usage() == USAGE
+
+    @respx.mock
+    def test_none_of_it_costs_credits(self, client):
+        respx.get(SPORTS_URL).mock(return_value=httpx.Response(200, json=SPORTS_LIGHT))
+        respx.get(RESULTS_SPORTS_URL).mock(return_value=httpx.Response(200, json=SPORTS_LIGHT))
+        respx.get(USAGE_URL).mock(return_value=httpx.Response(200, json=USAGE))
+
+        client.list_sports(markets=True)
+        client.get_sport("AFL")
+        client.list_results_sports()
+        client.get_usage()
+
+        assert client.credits_used == 0
 
 
 class TestErrorMapping:
@@ -315,3 +407,13 @@ class TestAsyncClient:
 
         async with AsyncRapidOddsAPI(KEY, max_retries=1) as client:
             assert await client.get_results("AFL", status="live") == EMPTY
+
+    @respx.mock
+    async def test_metadata(self):
+        respx.get(SPORTS_URL).mock(return_value=httpx.Response(200, json=SPORTS_LIGHT))
+        respx.get(USAGE_URL).mock(return_value=httpx.Response(200, json=USAGE))
+
+        async with AsyncRapidOddsAPI(KEY, max_retries=1) as client:
+            assert await client.list_sports() == SPORTS_LIGHT
+            assert await client.get_usage() == USAGE
+            assert client.credits_used == 0

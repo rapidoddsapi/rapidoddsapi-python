@@ -1,6 +1,6 @@
 import asyncio
 from types import TracebackType
-from typing import Any, AsyncIterator, Dict, Optional, Sequence, Type, TypeVar, cast
+from typing import Any, AsyncIterator, Dict, List, Optional, Sequence, Type, TypeVar, cast
 
 import httpx
 
@@ -11,6 +11,7 @@ from ._http import (
     odds_params,
     results_params,
     retry_delay,
+    sports_params,
 )
 from .constants import (
     BASE_URL,
@@ -27,7 +28,14 @@ from .exceptions import (
     ServerError,
     ValidationError,
 )
-from .types import OddsResponse, OddsUpdate, ResultsResponse, ResultsUpdate
+from .types import (
+    OddsResponse,
+    OddsUpdate,
+    ResultsResponse,
+    ResultsUpdate,
+    SportInfo,
+    Usage,
+)
 
 T = TypeVar("T")
 
@@ -95,6 +103,28 @@ class AsyncRapidOddsAPI:
         )
         if data.get("games"):
             self._credits_used += 1
+        return data
+
+    async def list_sports(self, *, markets: bool = False) -> List[SportInfo]:
+        data: List[SportInfo] = await self._request(
+            "/sports", sports_params(self.api_key, None, markets)
+        )
+        return data
+
+    async def get_sport(self, sport: str, *, markets: bool = True) -> SportInfo:
+        data: SportInfo = await self._request(
+            "/sports", sports_params(self.api_key, sport, markets)
+        )
+        return data
+
+    async def list_results_sports(self) -> List[SportInfo]:
+        data: List[SportInfo] = await self._request(
+            "/results/sports", [("api_key", self.api_key)]
+        )
+        return data
+
+    async def get_usage(self) -> Usage:
+        data: Usage = await self._request("/usage", [("api_key", self.api_key)])
         return data
 
     def stream_odds(

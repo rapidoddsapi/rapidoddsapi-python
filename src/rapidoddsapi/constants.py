@@ -2,6 +2,11 @@
 
 Sport ids are the same strings the API uses, passed straight through:
 `client.get_odds("AFL", ...)`.
+
+The sport tuples below are a snapshot, useful offline and for autocomplete.
+`client.list_sports()` asks the API for the current list, and for each sport's
+market keys, at no credit cost. Bookmakers have no such endpoint, so
+`BOOKMAKERS` is the only list of those.
 """
 
 BASE_URL = "https://api.rapidoddsapi.com"

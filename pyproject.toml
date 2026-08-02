@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rapidoddsapi"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Official Python SDK for RapidOddsAPI: bookmaker odds, live scores and player stats over REST and WebSocket."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -44,6 +44,9 @@ dev = [
 Homepage = "https://rapidoddsapi.com"
 Documentation = "https://rapidoddsapi.com/docs"
 Repository = "https://github.com/rapidoddsapi/rapidoddsapi-python"
+
+[tool.hatch.version]
+path = "src/rapidoddsapi/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/rapidoddsapi"]

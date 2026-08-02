@@ -36,7 +36,7 @@ from .exceptions import (
 )
 from .helpers import find_arbitrage, find_value_bets, group_games, parse_time
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "RapidOddsAPI",

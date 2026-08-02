@@ -54,6 +54,15 @@ def results_params(
     return params
 
 
+def sports_params(api_key: str, sport: Optional[str], markets: bool) -> Params:
+    params: Params = [("api_key", api_key)]
+    if sport is not None:
+        params.append(("sport", sport))
+    if markets:
+        params.append(("markets", "true"))
+    return params
+
+
 def _detail(status_code: int, body: Any) -> str:
     if isinstance(body, dict):
         detail = body.get("detail")

@@ -35,9 +35,10 @@ coverage.xml
 .env.*
 !.env.example
 
-# Local scratch scripts
+# Local scratch scripts and notes
 live_check.py
 try_*.py
+notes.txt
 
 # Editors
 .vscode/

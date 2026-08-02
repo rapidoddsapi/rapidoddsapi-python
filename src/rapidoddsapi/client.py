@@ -1,7 +1,7 @@
 import asyncio
 import time
 from types import TracebackType
-from typing import Any, AsyncIterator, Dict, Iterator, Optional, Sequence, Type, TypeVar
+from typing import Any, AsyncIterator, Dict, Iterator, List, Optional, Sequence, Type, TypeVar
 
 import httpx
 
@@ -12,6 +12,7 @@ from ._http import (
     odds_params,
     results_params,
     retry_delay,
+    sports_params,
 )
 from .constants import (
     BASE_URL,
@@ -28,7 +29,14 @@ from .exceptions import (
     ServerError,
     ValidationError,
 )
-from .types import OddsResponse, OddsUpdate, ResultsResponse, ResultsUpdate
+from .types import (
+    OddsResponse,
+    OddsUpdate,
+    ResultsResponse,
+    ResultsUpdate,
+    SportInfo,
+    Usage,
+)
 
 T = TypeVar("T")
 
@@ -65,7 +73,8 @@ class RapidOddsAPI:
 
         Counted locally using the same formula as the API, and only when a call
         returns games, since empty responses are free. It does not know about
-        spend from other processes or earlier runs.
+        spend from other processes or earlier runs. `get_usage` asks the server
+        for the real balance.
         """
         return self._credits_used
 
@@ -114,6 +123,53 @@ class RapidOddsAPI:
         )
         if data.get("games"):
             self._credits_used += 1
+        return data
+
+    def list_sports(self, *, markets: bool = False) -> List[SportInfo]:
+        """Every sport the API accepts, newest coverage included.
+
+        Free. `markets=True` adds each sport's market keys, which is around 440
+        keys in total, so prefer `get_sport` when you only care about one.
+
+        Being listed means the API accepts the id, not that games are available
+        right now. Out of season, or a league not yet scraped, returns an empty
+        games list, which costs nothing.
+        """
+        data: List[SportInfo] = self._request(
+            "/sports", sports_params(self.api_key, None, markets)
+        )
+        return data
+
+    def get_sport(self, sport: str, *, markets: bool = True) -> SportInfo:
+        """One sport and, unless you say otherwise, its market keys.
+
+        Free. The keys under `markets` are exactly what `get_odds` takes as
+        `market_types`. An unknown sport raises `NotFoundError`.
+        """
+        data: SportInfo = self._request(
+            "/sports", sports_params(self.api_key, sport, markets)
+        )
+        return data
+
+    def list_results_sports(self) -> List[SportInfo]:
+        """Sports with live scores and player stats.
+
+        Free. Shorter than `list_sports`, since results cover fewer sports than
+        odds do.
+        """
+        data: List[SportInfo] = self._request(
+            "/results/sports", [("api_key", self.api_key)]
+        )
+        return data
+
+    def get_usage(self) -> Usage:
+        """Credits used and remaining on this key, as the server sees it.
+
+        Free. Unlike `credits_used`, which only knows what this client spent,
+        this is the real balance and survives restarts. Odds and results draw
+        on the same one.
+        """
+        data: Usage = self._request("/usage", [("api_key", self.api_key)])
         return data
 
     def stream_odds(
